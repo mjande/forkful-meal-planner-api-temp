@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	"github.com/mjande/forkful-meal-planner-api/internal/handlers"
 	"github.com/mjande/forkful-meal-planner-api/internal/models"
 )
@@ -21,8 +22,17 @@ func main() {
 	log.Println("Database successfully connected")
 
 	router := chi.NewRouter()
+	router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
 	router.Route("/ingredients", func(r chi.Router) {
 		r.Get("/", handlers.GetIngredients)
+		r.Post("/", handlers.PostIngredient)
 	})
 
 	port := 3001
