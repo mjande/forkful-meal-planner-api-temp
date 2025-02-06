@@ -7,13 +7,11 @@ import (
 )
 
 type Ingredient struct {
-	ID   int
-	Name string
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 }
 
 func ListIngredients() ([]Ingredient, error) {
-	log.Println(db)
-
 	query := `SELECT id, name FROM ingredients`
 
 	rows, err := db.Query(query)
@@ -41,4 +39,36 @@ func ListIngredients() ([]Ingredient, error) {
 	}
 
 	return ingredients, nil
+}
+
+func FindIngredient(id int) (Ingredient, error) {
+	query := `SELECT id, name FROM ingredients WHERE id = ?`
+
+	result := db.QueryRow(query, id)
+
+	var ingredient Ingredient
+
+	err := result.Scan(&ingredient.ID, &ingredient.Name)
+	if err != nil {
+		return ingredient, err
+	}
+
+	return ingredient, nil
+
+}
+
+func CreateIngredient(name string) (int, error) {
+	query := `INSERT INTO ingredients (name) VALUES (?)`
+
+	result, err := db.Exec(query, name)
+	if err != nil {
+		return -1, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return -1, err
+	}
+
+	return int(id), nil
 }
