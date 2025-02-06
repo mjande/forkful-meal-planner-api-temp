@@ -85,9 +85,13 @@ func UpdateIngredient(id int, ingredient Ingredient) error {
 
 	// Send query
 	_, err := db.Exec(query, ingredient.Name, id)
-	if err != nil {
-		return err
-	}
+	return err
+}
 
-	return nil
+func DeleteIngredient(id int) error {
+	query := `DELETE FROM ingredients WHERE id = ?`
+
+	// Send query
+	_, err := db.Exec(query, id)
+	return err
 }

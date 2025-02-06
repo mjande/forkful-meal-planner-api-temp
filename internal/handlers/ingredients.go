@@ -95,7 +95,7 @@ func PatchIngredient(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Use database function to create ingredient
-	err = models.UpdateIngredient(ingredient.ID, ingredient)
+	err = models.UpdateIngredient(id, ingredient)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		log.Println(err)
@@ -111,11 +111,41 @@ func PatchIngredient(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Encode ingredient as JSON and send response
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(ingredient)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
+}
+
+// Handles updating an ingredient.
+func DeleteIngredient(w http.ResponseWriter, r *http.Request) {
+	// Get ID from request
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Println(err)
+		return
+	}
+
+	// Check that ingredient exists
+	_, err = models.FindIngredient(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		log.Println(err)
+		return
+	}
+
+	// Use database function to create ingredient
+	err = models.DeleteIngredient(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Println(err)
+		return
+	}
+
+	// Encode ingredient as JSON and send response
+	w.WriteHeader(http.StatusNoContent)
 }

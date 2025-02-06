@@ -34,6 +34,7 @@ func main() {
 		r.Get("/", handlers.GetIngredients)
 		r.Post("/", handlers.PostIngredient)
 		r.Patch("/{id}", handlers.PatchIngredient)
+		r.Delete("/{id}", handlers.DeleteIngredient)
 	})
 
 	port := 3001
