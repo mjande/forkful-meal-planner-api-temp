@@ -11,9 +11,11 @@ type Ingredient struct {
 	Name string `json:"name"`
 }
 
+// Queries the database for all ingredients.
 func ListIngredients() ([]Ingredient, error) {
 	query := `SELECT id, name FROM ingredients`
 
+	// Sends query
 	rows, err := db.Query(query)
 	if err != nil {
 		log.Println("Error encountered")
@@ -21,8 +23,8 @@ func ListIngredients() ([]Ingredient, error) {
 	}
 	defer rows.Close()
 
+	// Maps database response into ingredients slice
 	var ingredients []Ingredient
-
 	for rows.Next() {
 		var ingredient Ingredient
 
@@ -41,13 +43,15 @@ func ListIngredients() ([]Ingredient, error) {
 	return ingredients, nil
 }
 
+// Queries the database for an ingredient that has the given id.
 func FindIngredient(id int) (Ingredient, error) {
 	query := `SELECT id, name FROM ingredients WHERE id = ?`
 
+	// Query the database
 	result := db.QueryRow(query, id)
 
+	// Scan database result into ingredient object
 	var ingredient Ingredient
-
 	err := result.Scan(&ingredient.ID, &ingredient.Name)
 	if err != nil {
 		return ingredient, err
@@ -57,14 +61,17 @@ func FindIngredient(id int) (Ingredient, error) {
 
 }
 
+// Queries the database to create an ingredient.
 func CreateIngredient(name string) (int, error) {
 	query := `INSERT INTO ingredients (name) VALUES (?)`
 
+	// Send query
 	result, err := db.Exec(query, name)
 	if err != nil {
 		return -1, err
 	}
 
+	// Get id of created ingredient
 	id, err := result.LastInsertId()
 	if err != nil {
 		return -1, err
