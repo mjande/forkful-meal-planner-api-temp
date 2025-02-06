@@ -79,3 +79,15 @@ func CreateIngredient(name string) (int, error) {
 
 	return int(id), nil
 }
+
+func UpdateIngredient(id int, ingredient Ingredient) error {
+	query := `UPDATE ingredients SET name = ? WHERE id = ?`
+
+	// Send query
+	_, err := db.Exec(query, ingredient.Name, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

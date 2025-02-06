@@ -24,7 +24,7 @@ func main() {
 	router := chi.NewRouter()
 	router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: false,
@@ -33,6 +33,7 @@ func main() {
 	router.Route("/ingredients", func(r chi.Router) {
 		r.Get("/", handlers.GetIngredients)
 		r.Post("/", handlers.PostIngredient)
+		r.Patch("/{id}", handlers.PatchIngredient)
 	})
 
 	port := 3001
