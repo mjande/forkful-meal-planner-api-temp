@@ -42,6 +42,7 @@ func main() {
 
 	router.Route("/recipes", func(r chi.Router) {
 		r.Get("/", handlers.GetRecipes)
+		r.Get("/{id}", handlers.GetRecipe)
 	})
 
 	port := 3001
