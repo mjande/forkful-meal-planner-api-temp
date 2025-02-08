@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/mjande/forkful-meal-planner-api/internal/handlers"
 	"github.com/mjande/forkful-meal-planner-api/internal/models"
@@ -30,11 +31,17 @@ func main() {
 		AllowCredentials: false,
 		MaxAge:           300,
 	}))
+	router.Use(middleware.Logger)
+
 	router.Route("/ingredients", func(r chi.Router) {
 		r.Get("/", handlers.GetIngredients)
 		r.Post("/", handlers.PostIngredient)
 		r.Patch("/{id}", handlers.PatchIngredient)
 		r.Delete("/{id}", handlers.DeleteIngredient)
+	})
+
+	router.Route("/recipes", func(r chi.Router) {
+		r.Get("/", handlers.GetRecipes)
 	})
 
 	port := 3001

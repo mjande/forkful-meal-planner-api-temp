@@ -1,8 +1,6 @@
 package models
 
 import (
-	"log"
-
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -15,29 +13,28 @@ type Ingredient struct {
 func ListIngredients() ([]Ingredient, error) {
 	query := `SELECT id, name FROM ingredients`
 
-	// Sends query
+	// Execute query
 	rows, err := db.Query(query)
 	if err != nil {
-		log.Println("Error encountered")
 		return []Ingredient{}, err
 	}
 	defer rows.Close()
 
-	// Maps database response into ingredients slice
+	// Map database response onto ingredients slice
 	var ingredients []Ingredient
 	for rows.Next() {
 		var ingredient Ingredient
 
 		err = rows.Scan(&ingredient.ID, &ingredient.Name)
 		if err != nil {
-			return nil, err
+			return []Ingredient{}, err
 		}
 
 		ingredients = append(ingredients, ingredient)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return []Ingredient{}, err
 	}
 
 	return ingredients, nil
