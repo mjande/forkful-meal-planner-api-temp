@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	err := models.InitDB("/Users/mattanderson/Code/cs-post-bacc/361-swe1/forkful-meal-planner-api/sqlite/forkful-meal-planner-db")
+	err := models.InitDB("/Users/mattanderson/Code/cs-post-bacc/361-swe1/forkful-meal-planner-api/sqlite/forkful-meal-planner-db?_fk=true")
 	if err != nil {
 		log.Panicln(err)
 		models.CloseDB()
