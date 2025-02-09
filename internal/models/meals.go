@@ -62,3 +62,14 @@ func CreateMeal(meal Meal) (int64, error) {
 
 	return id, nil
 }
+
+func DeleteMeal(id int64) error {
+	query := `DELETE FROM meals WHERE id = ?`
+
+	_, err := db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/mjande/forkful-meal-planner-api/internal/models"
 )
 
@@ -58,4 +60,23 @@ func PostMeal(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println()
 	}
+}
+
+func DeleteMeal(w http.ResponseWriter, r *http.Request) {
+	// Extract id from request
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Println(err)
+		return
+	}
+
+	err = models.DeleteMeal(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

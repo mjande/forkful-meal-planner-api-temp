@@ -48,6 +48,7 @@ func main() {
 	router.Route("/meals", func(r chi.Router) {
 		r.Get("/", handlers.GetMealsByDate)
 		r.Post("/", handlers.PostMeal)
+		r.Delete("/{id}", handlers.DeleteMeal)
 	})
 
 	port := 3001
