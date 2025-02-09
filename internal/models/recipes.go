@@ -1,6 +1,9 @@
 package models
 
 import (
+	"database/sql"
+	"slices"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -106,17 +109,83 @@ func CreateRecipe(recipe Recipe) (int64, error) {
 		return -1, err
 	}
 
+	// Create ingredients
 	for i := 0; i < len(recipe.Ingredients); i++ {
 		ingredient := recipe.Ingredients[i]
+		ingredient.RecipeID = id
 
-		// Create association between recipe and ingredient
-		recipeIngredientQuery := `INSERT INTO ingredients (name, recipe_id, quantity, unit) VALUES (?, ?, ?, ?)`
-
-		_, err = db.Exec(recipeIngredientQuery, ingredient.Name, id, ingredient.Quantity, ingredient.Unit)
+		_, err = createIngredient(ingredient)
 		if err != nil {
 			return -1, err
 		}
 	}
 
 	return id, nil
+}
+
+func UpdateRecipe(id int64, recipe Recipe) (int64, error) {
+	query := `UPDATE recipes SET name = ?, cooking_time = ?, description = ?, instructions = ? WHERE id = ?`
+
+	// Send query
+	_, err := db.Exec(query, recipe.Name, recipe.CookingTime, recipe.Description, recipe.Instructions, id)
+	if err != nil {
+		return -1, err
+	}
+
+	var keptIngredientIds []int64
+
+	for i := 0; i < len(recipe.Ingredients); i++ {
+		ingredient := recipe.Ingredients[i]
+		ingredient.RecipeID = id
+
+		// Check if ingredient was previously in recipe
+		prevIngredient, err := FindIngredient(ingredient.Name, id)
+		if err != nil && err == sql.ErrNoRows {
+			// A previous version of this recipe's ingredient does not exist, so
+			// create it
+			_, err = createIngredient(ingredient)
+			if err != nil {
+				return -1, err
+			}
+		} else if err != nil {
+			return -1, err
+		} else {
+			// Update previous version of ingredient
+			query = `UPDATE ingredients SET name = ?, quantity = ?, unit = ? WHERE id = ?`
+
+			_, err = db.Exec(query, ingredient.Name, ingredient.Quantity, ingredient.Unit, prevIngredient.ID)
+			if err != nil {
+				return -1, err
+			}
+
+			keptIngredientIds = append(keptIngredientIds, prevIngredient.ID)
+		}
+	}
+
+	// Remove ingredients that are no longer used
+	deleteQuery := `DELETE FROM ingredients WHERE id = ?`
+
+	prevAndCurrIngredients, err := ListIngredientsByRecipe(id)
+	if err != nil {
+		return -1, err
+	}
+
+	for _, ingredient := range prevAndCurrIngredients {
+		if !slices.Contains(keptIngredientIds, ingredient.ID) {
+			db.Exec(deleteQuery, ingredient.ID)
+		}
+	}
+
+	return id, nil
+}
+
+func DeleteRecipe(id int64) error {
+	query := `DELETE FROM recipes WHERE id = ?`
+
+	_, err := db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

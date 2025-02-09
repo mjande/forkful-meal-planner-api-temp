@@ -35,17 +35,14 @@ func main() {
 
 	router.Route("/ingredients", func(r chi.Router) {
 		r.Get("/", handlers.GetIngredients)
-		/*
-			r.Post("/", handlers.PostIngredient)
-			r.Patch("/{id}", handlers.PatchIngredient)
-			r.Delete("/{id}", handlers.DeleteIngredient)
-		*/
 	})
 
 	router.Route("/recipes", func(r chi.Router) {
 		r.Get("/", handlers.GetRecipes)
 		r.Get("/{id}", handlers.GetRecipe)
 		r.Post("/", handlers.PostRecipe)
+		r.Patch("/{id}", handlers.PatchRecipe)
+		r.Delete("/{id}", handlers.DeleteRecipe)
 	})
 
 	port := 3001

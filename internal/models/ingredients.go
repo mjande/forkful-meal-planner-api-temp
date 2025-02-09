@@ -1,6 +1,8 @@
 package models
 
 import (
+	"database/sql"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -47,4 +49,66 @@ func ListIngredients() ([]string, error) {
 	}
 
 	return ingredients, nil
+}
+
+func ListIngredientsByRecipe(recipeId int64) ([]Ingredient, error) {
+	query := `SELECT id, name, recipe_id, quantity, unit FROM ingredients WHERE recipe_id = ?`
+
+	rows, err := db.Query(query, recipeId)
+	if err != nil && err == sql.ErrNoRows {
+		return []Ingredient{}, nil
+	} else if err != nil {
+		return []Ingredient{}, err
+	}
+
+	// Map database response onto recipes slice
+	var ingredients []Ingredient
+	for rows.Next() {
+		var ingredient Ingredient
+
+		err = rows.Scan(&ingredient.ID, &ingredient.Name, &ingredient.RecipeID, &ingredient.Quantity, &ingredient.Unit)
+		if err != nil {
+			return []Ingredient{}, err
+		}
+
+		ingredients = append(ingredients, ingredient)
+	}
+
+	if err = rows.Err(); err != nil {
+		return []Ingredient{}, err
+	}
+
+	return ingredients, nil
+}
+
+func FindIngredient(name string, recipeId int64) (Ingredient, error) {
+	query := `SELECT id, name, recipe_id, quantity, unit FROM ingredients WHERE name = ? AND recipe_id = ?`
+
+	// Query the database
+	result := db.QueryRow(query, name, recipeId)
+
+	// Scan database result into recipe object
+	var ingredient Ingredient
+	err := result.Scan(&ingredient.ID, &ingredient.Name, &ingredient.RecipeID, &ingredient.Quantity, &ingredient.Unit)
+	if err != nil {
+		return Ingredient{}, err
+	}
+
+	return ingredient, nil
+}
+
+func createIngredient(ingredient Ingredient) (int64, error) {
+	query := `INSERT INTO ingredients (name, recipe_id, quantity, unit) VALUES (?, ?, ?, ?)`
+
+	result, err := db.Exec(query, ingredient.Name, ingredient.RecipeID, ingredient.Quantity, ingredient.Unit)
+	if err != nil {
+		return -1, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return -1, err
+	}
+
+	return id, nil
 }
