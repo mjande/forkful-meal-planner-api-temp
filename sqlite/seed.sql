@@ -34,32 +34,31 @@ INSERT INTO recipes (name, description, cooking_time, instructions) VALUES
  '1. In a large bowl, mix flour, sugar, salt, and baking powder.\n2. Whisk in eggs, milk, and melted butter until smooth.\n3. Heat a non-stick pan over medium heat.\n4. Pour batter onto the pan and sprinkle with chocolate chips.\n5. Cook until bubbles form, then flip and cook until golden brown.\n6. Serve warm with your favorite toppings.'
 );
 
-DELETE FROM recipe_ingredients;
+DELETE FROM ingredients;
 -- Garlic Parmesan Chicken
-INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, unit) VALUES
-(1, 7, 2, 'pcs'),        -- Chicken Breast
-(1, 8, 3, 'cloves'),     -- Garlic
-(1, 9, 2, 'tbsp'),       -- Olive Oil
-(1, 10, 0.5, 'cup');     -- Parmesan Cheese
+INSERT INTO ingredients (name, recipe_id, quantity, unit) VALUES
+('chicken breast' 1, 2, 'pcs'),    
+('garlic', 1, 3, 'cloves'),  
+('olive oil', 1, 2, 'tbsp'),     
+('parmesan cheese', 10, 0.5, 'cup');
 
 -- Spaghetti with Tomato Basil Sauce
-INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, unit) VALUES
-(2, 11, 200, 'grams'),   -- Spaghetti
-(2, 12, 3, 'pcs'),       -- Tomatoes
-(2, 13, 5, 'leaves'),    -- Basil
-(2, 9, 1, 'tbsp'),       -- Olive Oil
-(2, 8, 1, 'clove');      -- Garlic
+INSERT INTO ingredients (name, recipe_id, quantity, unit) VALUES
+('spaghetti', 2, 200, 'grams'),
+('tomatoes', 2, 3, 'pcs'), 
+('basil', 2, 5, 'leaves'),  
+('olive oil', 2, 1, 'tbsp'),  
+('garlic', 2, 1, 'clove'); 
 
 -- Chocolate Chip Pancakes
 INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, unit) VALUES
-(3, 1, 1.5, 'cups'),     -- Flour
-(3, 2, 0.25, 'cup'),     -- Sugar
-(3, 3, 2, 'pcs'),        -- Eggs
-(3, 4, 1, 'cup'),        -- Milk
-(3, 5, 2, 'tbsp'),       -- Butter
-(3, 6, 0.5, 'tsp');      -- Salt
+('flour', 3, 1.5, 'cups'),   
+('sugar', 3, 0.25, 'cup'),
+('eggs', 3, 2, 'pcs'),      
+('milk', 3, 1, 'cup'),  
+('butter', 3, 2, 'tbsp'),      
+('salt', 3, 0.5, 'tsp');    
 
 
-SELECT * FROM ingredients;
 SELECT * FROM recipes;
-SELECT * FROM recipe_ingredients;
+SELECT * FROM ingredients;

@@ -5,20 +5,12 @@ import (
 )
 
 type Recipe struct {
-	ID           int                `json:"id"`
-	Name         string             `json:"name"`
-	CookingTime  string             `json:"cookingTime"`
-	Description  string             `json:"description"`
-	Instructions string             `json:"instructions"`
-	Ingredients  []RecipeIngredient `json:"ingredients"`
-}
-
-type RecipeIngredient struct {
-	ID           int     `json:"id"`
-	IngredientID int     `json:"ingredientId"`
-	Name         string  `json:"name"`
-	Unit         string  `json:"unit"`
-	Quantity     float32 `json:"quantity"`
+	ID           int64        `json:"id"`
+	Name         string       `json:"name"`
+	CookingTime  string       `json:"cookingTime"`
+	Description  string       `json:"description"`
+	Instructions string       `json:"instructions"`
+	Ingredients  []Ingredient `json:"ingredients"`
 }
 
 // Queries the database for all recipes (while only loading basic
@@ -54,7 +46,7 @@ func ListRecipes() ([]Recipe, error) {
 }
 
 // Queries the database for an ingredient that has the given id.
-func FindRecipe(id int) (Recipe, error) {
+func FindRecipe(id int64) (Recipe, error) {
 	query := `SELECT id, name, cooking_time, description, instructions FROM recipes WHERE id = ?`
 
 	// Query the database
@@ -67,12 +59,7 @@ func FindRecipe(id int) (Recipe, error) {
 		return Recipe{}, err
 	}
 
-	ingredientsQuery := `
-		SELECT ri.id, i.id, i.name, ri.unit, ri.quantity 
-    		FROM recipe_ingredients as ri 
-		LEFT JOIN ingredients AS i ON i.id = ri.ingredient_id
-    		WHERE ri.recipe_id = ?
-	`
+	ingredientsQuery := `SELECT id, name, quantity, unit FROM ingredients WHERE id = ?`
 
 	// Get all ingredients used in this recipe
 	rows, err := db.Query(ingredientsQuery, recipe.ID)
@@ -81,12 +68,12 @@ func FindRecipe(id int) (Recipe, error) {
 	}
 	defer rows.Close()
 
-	// Map database response onto ingredientss slice
-	var ingredients []RecipeIngredient
+	// Map database response onto ingredients slice
+	var ingredients []Ingredient
 	for rows.Next() {
-		var ingredient RecipeIngredient
+		var ingredient Ingredient
 
-		err = rows.Scan(&ingredient.ID, &ingredient.IngredientID, &ingredient.Name, &ingredient.Unit, &ingredient.Quantity)
+		err = rows.Scan(&ingredient.ID, &ingredient.Name, &ingredient.Quantity, &ingredient.Unit)
 		if err != nil {
 			return Recipe{}, err
 		}
@@ -102,4 +89,34 @@ func FindRecipe(id int) (Recipe, error) {
 	recipe.Ingredients = ingredients
 
 	return recipe, nil
+}
+
+func CreateRecipe(recipe Recipe) (int64, error) {
+	query := `INSERT INTO recipes (name, cooking_time, description, instructions) VALUES (?, ?, ?, ?)`
+
+	// Send query
+	result, err := db.Exec(query, recipe.Name, recipe.CookingTime, recipe.Description, recipe.Instructions)
+	if err != nil {
+		return -1, err
+	}
+
+	// Get id of created recipe
+	id, err := result.LastInsertId()
+	if err != nil {
+		return -1, err
+	}
+
+	for i := 0; i < len(recipe.Ingredients); i++ {
+		ingredient := recipe.Ingredients[i]
+
+		// Create association between recipe and ingredient
+		recipeIngredientQuery := `INSERT INTO ingredients (name, recipe_id, quantity, unit) VALUES (?, ?, ?, ?)`
+
+		_, err = db.Exec(recipeIngredientQuery, ingredient.Name, id, ingredient.Quantity, ingredient.Unit)
+		if err != nil {
+			return -1, err
+		}
+	}
+
+	return id, nil
 }

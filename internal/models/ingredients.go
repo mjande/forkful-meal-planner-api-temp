@@ -5,90 +5,46 @@ import (
 )
 
 type Ingredient struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID       int64   `json:"id"`
+	Name     string  `json:"name"`
+	RecipeID int64   `json:"recipeId"`
+	Quantity float32 `json:"quantity"`
+	Unit     string  `json:"unit"`
 }
 
-// Queries the database for all ingredients.
-func ListIngredients() ([]Ingredient, error) {
-	query := `SELECT id, name FROM ingredients`
+// Queries the database for all unique ingredients used in any recipe.
+func ListIngredients() ([]string, error) {
+	query := `SELECT name FROM ingredients`
 
 	// Execute query
 	rows, err := db.Query(query)
 	if err != nil {
-		return []Ingredient{}, err
+		return []string{}, err
 	}
 	defer rows.Close()
 
-	// Map database response onto ingredients slice
-	var ingredients []Ingredient
+	// Map database response onto ingredients set
+	ingredientsSet := map[string]bool{}
 	for rows.Next() {
-		var ingredient Ingredient
+		var ingredient string
 
-		err = rows.Scan(&ingredient.ID, &ingredient.Name)
+		err = rows.Scan(&ingredient)
 		if err != nil {
-			return []Ingredient{}, err
+			return []string{}, err
 		}
 
-		ingredients = append(ingredients, ingredient)
+		ingredientsSet[ingredient] = true
 	}
 
 	if err = rows.Err(); err != nil {
-		return []Ingredient{}, err
+		return []string{}, err
+	}
+
+	// Extract all unique ingredients in map into slice
+	var ingredients []string
+	for ingredient := range ingredientsSet {
+		ingredients = append(ingredients, ingredient)
 	}
 
 	return ingredients, nil
-}
-
-// Queries the database for an ingredient that has the given id.
-func FindIngredient(id int) (Ingredient, error) {
-	query := `SELECT id, name FROM ingredients WHERE id = ?`
-
-	// Query the database
-	result := db.QueryRow(query, id)
-
-	// Scan database result into ingredient object
-	var ingredient Ingredient
-	err := result.Scan(&ingredient.ID, &ingredient.Name)
-	if err != nil {
-		return ingredient, err
-	}
-
-	return ingredient, nil
-
-}
-
-// Queries the database to create an ingredient.
-func CreateIngredient(name string) (int, error) {
-	query := `INSERT INTO ingredients (name) VALUES (?)`
-
-	// Send query
-	result, err := db.Exec(query, name)
-	if err != nil {
-		return -1, err
-	}
-
-	// Get id of created ingredient
-	id, err := result.LastInsertId()
-	if err != nil {
-		return -1, err
-	}
-
-	return int(id), nil
-}
-
-func UpdateIngredient(id int, ingredient Ingredient) error {
-	query := `UPDATE ingredients SET name = ? WHERE id = ?`
-
-	// Send query
-	_, err := db.Exec(query, ingredient.Name, id)
-	return err
-}
-
-func DeleteIngredient(id int) error {
-	query := `DELETE FROM ingredients WHERE id = ?`
-
-	// Send query
-	_, err := db.Exec(query, id)
-	return err
 }

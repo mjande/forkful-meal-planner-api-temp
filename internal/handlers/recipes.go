@@ -32,7 +32,7 @@ func GetRecipes(w http.ResponseWriter, r *http.Request) {
 // Handles getting a single recipe.
 func GetRecipe(w http.ResponseWriter, r *http.Request) {
 	// Extract id from request
-	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		log.Println(err)
@@ -53,5 +53,42 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println(err)
+	}
+}
+
+// Handles creating a recipe with ingredients
+func PostRecipe(w http.ResponseWriter, r *http.Request) {
+	// Decode JSON data from request
+	var recipe models.Recipe
+	err := json.NewDecoder(r.Body).Decode(&recipe)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Println(err)
+		return
+	}
+
+	// Use database function to create recipe
+	id, err := models.CreateRecipe(recipe)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Println(err)
+		return
+	}
+
+	// Get recipe from database
+	recipe, err = models.FindRecipe(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		return
+	}
+
+	// Encode recipe as JSON and send response
+	w.WriteHeader(http.StatusCreated)
+	err = json.NewEncoder(w).Encode(recipe)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		return
 	}
 }
