@@ -45,6 +45,11 @@ func main() {
 		r.Delete("/{id}", handlers.DeleteRecipe)
 	})
 
+	router.Route("/meals", func(r chi.Router) {
+		r.Get("/", handlers.GetMealsByDate)
+		r.Post("/", handlers.PostMeal)
+	})
+
 	port := 3001
 
 	log.Printf("Listening on port %d...", port)

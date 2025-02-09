@@ -16,3 +16,11 @@ CREATE TABLE ingredients (
     quantity REAL NOT NULL,
     FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
 );
+
+DROP TABLE IF EXISTS meals;
+CREATE TABLE meals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    recipe_id INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    FOREIGN KEY (recipe_id) REFERENCES recipes(id)
+);

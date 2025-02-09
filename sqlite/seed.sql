@@ -59,6 +59,14 @@ INSERT INTO ingredients (name, recipe_id, quantity, unit) VALUES
 ('butter', 3, 2, 'tbsp'),      
 ('salt', 3, 0.5, 'tsp');    
 
+INSERT INTO meals (recipe_id, date) VALUES
+(1, '2025-02-05'),  
+(2, '2025-02-06'), 
+(3, '2025-02-07'), 
+(1, '2025-02-09'), 
+(2, '2025-02-10'); 
+
 
 SELECT * FROM recipes;
 SELECT * FROM ingredients;
+SELECT * FROM meals;
