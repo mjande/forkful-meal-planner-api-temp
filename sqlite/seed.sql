@@ -37,10 +37,10 @@ INSERT INTO recipes (name, description, cooking_time, instructions) VALUES
 DELETE FROM ingredients;
 -- Garlic Parmesan Chicken
 INSERT INTO ingredients (name, recipe_id, quantity, unit) VALUES
-('chicken breast' 1, 2, 'pcs'),    
+('chicken breast', 1, 2, 'pcs'),    
 ('garlic', 1, 3, 'cloves'),  
 ('olive oil', 1, 2, 'tbsp'),     
-('parmesan cheese', 10, 0.5, 'cup');
+('parmesan cheese', 1, 0.5, 'cup');
 
 -- Spaghetti with Tomato Basil Sauce
 INSERT INTO ingredients (name, recipe_id, quantity, unit) VALUES
@@ -51,7 +51,7 @@ INSERT INTO ingredients (name, recipe_id, quantity, unit) VALUES
 ('garlic', 2, 1, 'clove'); 
 
 -- Chocolate Chip Pancakes
-INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, unit) VALUES
+INSERT INTO ingredients (name, recipe_id, quantity, unit) VALUES
 ('flour', 3, 1.5, 'cups'),   
 ('sugar', 3, 0.25, 'cup'),
 ('eggs', 3, 2, 'pcs'),      

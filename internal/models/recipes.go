@@ -59,7 +59,7 @@ func FindRecipe(id int64) (Recipe, error) {
 		return Recipe{}, err
 	}
 
-	ingredientsQuery := `SELECT id, name, quantity, unit FROM ingredients WHERE id = ?`
+	ingredientsQuery := `SELECT id, name, quantity, unit FROM ingredients WHERE recipe_id = ?`
 
 	// Get all ingredients used in this recipe
 	rows, err := db.Query(ingredientsQuery, recipe.ID)
