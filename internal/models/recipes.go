@@ -14,6 +14,7 @@ type Recipe struct {
 	Description  string       `json:"description"`
 	Instructions string       `json:"instructions"`
 	Ingredients  []Ingredient `json:"ingredients"`
+	Tags         []string     `json:"tags"`
 }
 
 // Queries the database for all recipes (while only loading basic
@@ -36,6 +37,17 @@ func ListRecipes() ([]Recipe, error) {
 		err = rows.Scan(&recipe.ID, &recipe.Name, &recipe.CookingTime, &recipe.Description)
 		if err != nil {
 			return []Recipe{}, err
+		}
+
+		// Get all tags for this recipe
+		tags, err := findTagsByRecipe(recipe.ID)
+		if err != nil {
+			return []Recipe{}, err
+		}
+
+		// Add the tag name to this recipe
+		for _, tag := range tags {
+			recipe.Tags = append(recipe.Tags, tag.Name)
 		}
 
 		recipes = append(recipes, recipe)

@@ -24,3 +24,10 @@ CREATE TABLE meals (
     date TEXT NOT NULL,
     FOREIGN KEY (recipe_id) REFERENCES recipes(id)
 );
+
+DROP TABLE IF EXISTS recipe_tags;
+CREATE TABLE recipe_tags (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    recipe_id INTEGER NOT NULL,
+    name TEXT NOT NULL
+);
