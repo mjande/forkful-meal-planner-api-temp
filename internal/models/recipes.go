@@ -100,8 +100,19 @@ func FindRecipe(id int64) (Recipe, error) {
 		return Recipe{}, err
 	}
 
-	// Add ingredients slice to recipe object
+	tags, err := findTagsByRecipe(recipe.ID)
+	if err != nil {
+		return Recipe{}, err
+	}
+
+	var tagStrs []string
+	for _, tag := range tags {
+		tagStrs = append(tagStrs, tag.Name)
+	}
+
+	// Add ingredients and tags to recipe object
 	recipe.Ingredients = ingredients
+	recipe.Tags = tagStrs
 
 	return recipe, nil
 }
@@ -132,6 +143,14 @@ func CreateRecipe(recipe Recipe) (int64, error) {
 		}
 	}
 
+	// Create tags
+	for _, tag := range recipe.Tags {
+		_, err := createTag(id, tag)
+		if err != nil {
+			return -1, err
+		}
+	}
+
 	return id, nil
 }
 
@@ -145,7 +164,6 @@ func UpdateRecipe(id int64, recipe Recipe) (int64, error) {
 	}
 
 	var keptIngredientIds []int64
-
 	for i := 0; i < len(recipe.Ingredients); i++ {
 		ingredient := recipe.Ingredients[i]
 		ingredient.RecipeID = id
@@ -188,6 +206,11 @@ func UpdateRecipe(id int64, recipe Recipe) (int64, error) {
 		}
 	}
 
+	err = updateRecipeTags(id, recipe)
+	if err != nil {
+		return -1, err
+	}
+
 	return id, nil
 }
 
@@ -197,6 +220,48 @@ func DeleteRecipe(id int64) error {
 	_, err := db.Exec(query, id)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// Helper Functions
+
+// Takes a recipe ID and an updated recipe object. Updates the recipe in the
+// datase to reflect the new list of tags.
+func updateRecipeTags(recipeId int64, recipe Recipe) error {
+	tagsToDeleteSlice, err := findTagsByRecipe(recipeId)
+	if err != nil {
+		return err
+	}
+
+	tagsToDelete := map[int64]bool{}
+	for _, tag := range tagsToDeleteSlice {
+		tagsToDelete[tag.ID] = true
+	}
+
+	for _, tag := range recipe.Tags {
+		// Check if recipe previously included tag
+		prevTag, err := FindTag(recipeId, tag)
+		if err != nil && err == sql.ErrNoRows {
+			// A previous version of this tag does not exist, so create it
+			_, err = createTag(recipeId, tag)
+			if err != nil {
+				return err
+			}
+		} else if err != nil {
+			return err
+		} else {
+			tagsToDelete[prevTag.ID] = false
+		}
+	}
+
+	deleteQuery := `DELETE FROM recipe_tags WHERE id = ?`
+
+	for id, delete := range tagsToDelete {
+		if delete {
+			db.Exec(deleteQuery, id)
+		}
 	}
 
 	return nil

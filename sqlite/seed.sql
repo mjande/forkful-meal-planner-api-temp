@@ -66,8 +66,8 @@ INSERT INTO meals (recipe_id, date) VALUES
 (2, '2025-02-10'); 
 
 INSERT INTO recipe_tags (recipe_id, name) VALUES 
-(2, 'vegatarian'),
-(3, 'vegatarian'),
+(2, 'vegetarian'),
+(3, 'vegetarian'),
 (4, 'low-carb');
 
 

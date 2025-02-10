@@ -38,3 +38,33 @@ func findTagsByRecipe(recipeId int64) ([]Tag, error) {
 
 	return tags, nil
 }
+
+func FindTag(recipeId int64, name string) (Tag, error) {
+	query := `SELECT id, recipe_id, name FROM recipe_tags WHERE recipe_id = ? AND name = ?`
+
+	result := db.QueryRow(query, recipeId, name)
+
+	var tag Tag
+	err := result.Scan(&tag.ID, &tag.RecipeId, &tag.Name)
+	if err != nil {
+		return Tag{}, err
+	}
+
+	return tag, nil
+}
+
+func createTag(recipeId int64, tag string) (int64, error) {
+	query := `INSERT INTO recipe_tags (recipe_id, name) VALUES (?, ?)`
+
+	result, err := db.Exec(query, recipeId, tag)
+	if err != nil {
+		return -1, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return -1, err
+	}
+
+	return id, nil
+}
