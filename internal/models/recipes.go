@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"slices"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -163,47 +162,9 @@ func UpdateRecipe(id int64, recipe Recipe) (int64, error) {
 		return -1, err
 	}
 
-	var keptIngredientIds []int64
-	for i := 0; i < len(recipe.Ingredients); i++ {
-		ingredient := recipe.Ingredients[i]
-		ingredient.RecipeID = id
-
-		// Check if ingredient was previously in recipe
-		prevIngredient, err := FindIngredient(ingredient.Name, id)
-		if err != nil && err == sql.ErrNoRows {
-			// A previous version of this recipe's ingredient does not exist, so
-			// create it
-			_, err = createIngredient(ingredient)
-			if err != nil {
-				return -1, err
-			}
-		} else if err != nil {
-			return -1, err
-		} else {
-			// Update previous version of ingredient
-			query = `UPDATE ingredients SET name = ?, quantity = ?, unit = ? WHERE id = ?`
-
-			_, err = db.Exec(query, ingredient.Name, ingredient.Quantity, ingredient.Unit, prevIngredient.ID)
-			if err != nil {
-				return -1, err
-			}
-
-			keptIngredientIds = append(keptIngredientIds, prevIngredient.ID)
-		}
-	}
-
-	// Remove ingredients that are no longer used
-	deleteQuery := `DELETE FROM ingredients WHERE id = ?`
-
-	prevAndCurrIngredients, err := ListIngredientsByRecipe(id)
+	err = updateRecipeIngredients(id, recipe)
 	if err != nil {
-		return -1, err
-	}
-
-	for _, ingredient := range prevAndCurrIngredients {
-		if !slices.Contains(keptIngredientIds, ingredient.ID) {
-			db.Exec(deleteQuery, ingredient.ID)
-		}
+		return -1, nil
 	}
 
 	err = updateRecipeTags(id, recipe)
@@ -226,6 +187,59 @@ func DeleteRecipe(id int64) error {
 }
 
 // Helper Functions
+func updateRecipeIngredients(recipeId int64, recipe Recipe) error {
+	ingredientsToDeleteSlice, err := ListIngredientsByRecipe(recipeId)
+	if err != nil {
+		return err
+	}
+
+	ingredientsToDelete := map[int64]bool{}
+	for _, recipe := range ingredientsToDeleteSlice {
+		ingredientsToDelete[recipe.ID] = true
+	}
+
+	for i := 0; i < len(recipe.Ingredients); i++ {
+		ingredient := recipe.Ingredients[i]
+		ingredient.RecipeID = recipeId
+
+		// Check if ingredient was previously in recipe
+		prevIngredient, err := FindIngredient(ingredient.Name, recipeId)
+		if err != nil && err == sql.ErrNoRows {
+			// A previous version of this recipe's ingredient does not exist, so
+			// create it
+			_, err = createIngredient(ingredient)
+			if err != nil {
+				return err
+			}
+		} else if err != nil {
+			return err
+		} else {
+			// Update previous version of ingredient
+			updateQuery := `UPDATE ingredients SET name = ?, quantity = ?, unit = ? WHERE id = ?`
+
+			_, err = db.Exec(updateQuery, ingredient.Name, ingredient.Quantity, ingredient.Unit, prevIngredient.ID)
+			if err != nil {
+				return err
+			}
+
+			ingredientsToDelete[prevIngredient.ID] = false
+		}
+	}
+
+	// Remove ingredients that are no longer used
+	deleteQuery := `DELETE FROM ingredients WHERE id = ?`
+
+	for id, delete := range ingredientsToDelete {
+		if delete {
+			_, err = db.Exec(deleteQuery, id)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
 
 // Takes a recipe ID and an updated recipe object. Updates the recipe in the
 // datase to reflect the new list of tags.
@@ -260,7 +274,10 @@ func updateRecipeTags(recipeId int64, recipe Recipe) error {
 
 	for id, delete := range tagsToDelete {
 		if delete {
-			db.Exec(deleteQuery, id)
+			_, err = db.Exec(deleteQuery, id)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
